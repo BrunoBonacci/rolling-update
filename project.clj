@@ -35,4 +35,7 @@
                    :plugins      [[lein-midje "3.2.1"]
                                   [lein-shell "0.5.0"]
                                   [lein-binplus "0.6.5"]]}}
+  :aliases
+  {"package"
+   ["do" "shell" "./bin/package.sh"]}
   )

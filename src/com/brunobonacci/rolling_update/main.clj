@@ -72,5 +72,5 @@
       (do
         (list-targets cmd)
         (println "Preparing plan... (CTRL-c to abort)")
-        (sleep 3000)
+        (Thread/sleep 3000)
         (core/rolling-update cmd (cli/build-filters cmd))))))
