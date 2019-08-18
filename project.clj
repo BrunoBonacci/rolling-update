@@ -1,4 +1,4 @@
-(defproject com.brunobonacci/rolling-update "0.1.0"
+(defproject com.brunobonacci/rolling-update (-> "./resources/rolling-update.version" slurp .trim)
   :description "A command line tool for automated rolling update of auto-scaling groups."
 
   :url "https://github.com/BrunoBonacci/rolling-update"
@@ -17,9 +17,9 @@
                  [com.amazonaws/aws-java-sdk-core        "1.11.613"]
                  [com.amazonaws/aws-java-sdk-ec2         "1.11.613"]
                  [com.amazonaws/aws-java-sdk-autoscaling "1.11.613"]
-                 ]
+                 [instaparse "1.4.10"]]
 
-  :main com.brunobonacci.rolling-update
+  :main com.brunobonacci.rolling-update.main
 
   :global-vars {*warn-on-reflection* true}
 

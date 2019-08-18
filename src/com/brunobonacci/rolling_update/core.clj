@@ -1,10 +1,9 @@
-(ns com.brunobonacci.rolling-update
+(ns com.brunobonacci.rolling-update.core
   (:refer-clojure :exclude [printf])
   (:require [amazonica.aws.autoscaling :as asg]
             [amazonica.aws.ec2 :as ec2]
             [where.core :refer [where]]
-            [safely.core :refer [safely sleep]])
-  (:gen-class))
+            [safely.core :refer [safely sleep]]))
 
 
 
@@ -15,12 +14,31 @@
 
 
 
+(defn time-in-millis
+  [[time unit]]
+  (when (and time unit)
+    (case unit
+      :seconds (* time 1000)
+      :minutes (* time 60 1000)
+      :hours   (* time 60 60 1000))))
+
+
+
+(defn tags-as-map
+  [tags]
+  (->> tags
+     (map (fn [{:keys [key value]}] [(keyword key) value]))
+     (into {})))
+
+
+
 (defn find-asg
   [target]
   (->>
    (asg/describe-auto-scaling-groups)
    :auto-scaling-groups
-   (filter (where [:auto-scaling-group-name :GLOB-MATCHES? target]))))
+   (map #(update % :tags tags-as-map))
+   (filter (if (string? target) (where [:auto-scaling-group-name :GLOB-MATCHES? target]) target))))
 
 
 
@@ -38,7 +56,7 @@
   [instance]
   [{:action :terminate     :target instance}
    {:action :asg-stabilize :target (:auto-scaling-group-name instance)}
-   {:action :grace-period  :amount 30000}]) ;; TODO: from config (user grace period)
+   {:action :grace-period  }])
 
 
 
@@ -155,9 +173,9 @@
 
 
 (defmethod perform-action! :grace-period
-  [_ {:keys [amount]}]
+  [{:keys [grace-period]} _]
 
-  (sleep (or amount 5000)))
+  (sleep (or (time-in-millis grace-period) 60000)))
 
 
 
@@ -178,13 +196,17 @@
 
 
 (defmethod render-action :grace-period
-  [_ {:keys [amount]}]
-  (format "Waiting for %d as grace-period for app sync..." amount))
+  [{:keys [grace-period]} _]
+  (let [[time unit] grace-period
+        hunit (or (some->> unit name first str) "s")
+        amount (str (or time "60") hunit)]
+
+    (format "Waiting for: %s as grace-period for app sync..." amount)))
 
 
 
 (defn rolling-update
-  [asg-names]
+  [cfg asg-names]
   (let [asgs (find-asg asg-names)
         plan (build-plan terminate-and-wait-strategy asgs)]
 
@@ -192,19 +214,13 @@
       (printf "Step %d/%d: %s\n"
               (inc (:index step))
               (count plan)
-              (render-action {}  step))
-      (perform-action! {} step))))
+              (render-action cfg step))
+      (perform-action! cfg step))))
 
-
-
-(defn -main [target]
-  (println "starting rolling update on:")
-  (doseq [asg (->> (find-asg target) (map :auto-scaling-group-name))]
-    (println "    - " asg))
-  (rolling-update target))
 
 
 (comment
+
   (->> (find-asg "*bro*")
      (index-by :auto-scaling-group-name)
      #_(map :auto-scaling-group-name))
@@ -221,5 +237,5 @@
 
   plan
 
-  (rolling-update "*bro*")
+  (rolling-update {}  "*bro*")
   )

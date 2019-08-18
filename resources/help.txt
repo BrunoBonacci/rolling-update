@@ -1,0 +1,67 @@
+NAME
+
+    rolling-update - A command line tool for automated rolling update
+         of auto-scaling groups in cloud environments.
+                 (C) 2019 - Bruno Bonacci - v%s
+
+SYNOPSIS
+
+    rolling-update [global-options] [TARGET...]
+
+DESCRIPTION
+
+    rolling-update is a tool which allows you to automate rolling
+    restart of cloud entities such as auto-scaling groups on AWS.
+
+GLOBAL-OPTIONS
+
+    -h, --help
+        It displays this page.
+
+
+    -v, --version
+        It shows the tool's version.
+
+
+    --dryrun, --dry-run, --show-plan
+        Just print the plan without performing any step.
+
+
+    --grace-period <time-in-seconds>  (default: 60s)
+        The time to wait after the new the new instance comes to live
+        before starting terminating the next one.
+        This time is useful for stateful services such as databases
+        to allow the new joined instance to synch up with the rest
+        of the cluster. The amount of time required depends on the
+        specific of the application and the amount of data to transfer.
+        Values are in seconds, a suffix can be added to specify the
+        time unit such as: `s` for seconds, `m` minutes, `h` hours.
+
+TARGET
+
+    The auto-scaling group (or groups) which need to be restarted.
+
+    By name: web-app* or booking-asg
+        It supports glob matching (? for any singe char, * for any
+        number of any char). If provided it will be matched against
+        the auto-scaling group names.
+
+    By tag:  tag:<tag-name>=<tag-value>
+        It matches the auto-scaling groups with have a tag which
+        matches the given tag-name and tag-value pair.
+        Examples:
+           tag:Foo=bar
+           tag:service=booking-service
+           tag:GroupName='Any group value'
+
+STRATEGIES
+
+    Currently, the only supported strategy is `terminate-and-wait`.
+    It terminates one instance from the selected auto-scaling group
+    and it waits until the auto-scaling group stabilizes back with
+    a new instance coming into service. After that there is a waiting
+    grace period to allow the new instance to join the cluster and
+    synchronize with the rest of the group (if necessary).
+
+
+For more info please visit: https://github.com/BrunoBonacci/rolling-update
