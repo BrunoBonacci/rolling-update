@@ -6,6 +6,7 @@
   (:gen-class))
 
 
+
 (defn version
   []
   (some-> (io/resource "rolling-update.version") slurp str/trim))
@@ -18,7 +19,7 @@
 
 
 
-(defn exit-with-error [n msg]
+(defn exit-with-msg [n msg]
   (binding [*out* *err*]
     (println msg))
   (System/exit n))
@@ -27,10 +28,19 @@
 
 (defn list-targets
   [cmd]
-  (println "(*) Starting rolling update on:")
-  (doseq [asg (->> (core/find-asg (cli/build-filters cmd)) (map :auto-scaling-group-name))]
-    (println "    - " asg))
-  (println ""))
+  (println "(*) Rolling update targets:")
+  (let [targets (->> (core/find-asg (cli/build-filters cmd)) (map :auto-scaling-group-name))]
+    (doseq [asg targets]
+      (println "    - " asg))
+    (println "")
+    targets))
+
+
+
+(defn list-and-check-targets
+  [cmd]
+  (when-not (seq (list-targets cmd))
+    (exit-with-msg 5 "No target found with given selection!")))
 
 
 
@@ -48,29 +58,32 @@
   (println ""))
 
 
+
 (defn -main
   [& cli]
   (let [cmd (cli/parse-options (str/join " " cli))]
 
     (cond
       (cli/parse-error? cmd)
-      (exit-with-error 1 cmd)
+      (exit-with-msg 1 cmd)
 
       (:help cmd)
-      (exit-with-error 0 (help-page))
+      (exit-with-msg 0 (help-page))
 
       (:version cmd)
-      (exit-with-error 0 (format "rolling-update - v%s\n\n" (version)))
+      (exit-with-msg 0 (format "rolling-update - v%s\n\n" (version)))
 
       (nil? (:targets cmd))
-      (exit-with-error 0 "[no-op] No target selected, please provide a list of names for autoscaling groups to target!")
+      (exit-with-msg 0 "[no-op] No target selected, please provide a list of names for autoscaling groups to target!")
 
       (:dry-run cmd)
-      (show-plan cmd)
+      (do
+        (list-and-check-targets cmd)
+        (show-plan cmd))
 
       :else
       (do
-        (list-targets cmd)
+        (list-and-check-targets cmd)
         (println "Preparing plan... (CTRL-c to abort)")
         (Thread/sleep 3000)
         (core/rolling-update cmd (cli/build-filters cmd))))))

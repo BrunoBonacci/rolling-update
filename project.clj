@@ -17,7 +17,8 @@
                  [com.amazonaws/aws-java-sdk-core        "1.11.613"]
                  [com.amazonaws/aws-java-sdk-ec2         "1.11.613"]
                  [com.amazonaws/aws-java-sdk-autoscaling "1.11.613"]
-                 [instaparse "1.4.10"]]
+                 [instaparse "1.4.10"]
+                 [org.slf4j/slf4j-log4j12 "1.7.28"]]
 
   :main com.brunobonacci.rolling-update.main
 
@@ -29,8 +30,7 @@
 
   :profiles {:dev {:dependencies [[midje "1.9.9"]
                                   [org.clojure/test.check "0.10.0"]
-                                  [criterium "0.4.5"]
-                                  [org.slf4j/slf4j-log4j12 "1.7.28"]]
+                                  [criterium "0.4.5"]]
                    :resource-paths ["dev-resources"]
                    :plugins      [[lein-midje "3.2.1"]
                                   [lein-shell "0.5.0"]
