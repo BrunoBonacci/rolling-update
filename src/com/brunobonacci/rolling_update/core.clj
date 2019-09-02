@@ -35,7 +35,8 @@
 (defn find-asg
   [target]
   (->>
-   (asg/describe-auto-scaling-groups)
+   (asg/describe-auto-scaling-groups
+    {:max-records 100})
    :auto-scaling-groups
    (map #(update % :tags tags-as-map))
    (filter (if (string? target) (where [:auto-scaling-group-name :GLOB-MATCHES? target]) target))))
