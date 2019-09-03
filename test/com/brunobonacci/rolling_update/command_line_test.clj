@@ -61,3 +61,18 @@
      {:tag {"application" "web-server"}}]}
 
  )
+
+
+(facts
+ "strategies"
+
+ (parse-options "-s terminate")                  => {:strategy :terminate}
+ (parse-options "-s terminate-and-wait")         => {:strategy :terminate}
+ (parse-options "--strategy terminate")          => {:strategy :terminate}
+ (parse-options "--strategy terminate-and-wait") => {:strategy :terminate}
+
+ (parse-options "-s reboot")                     => {:strategy :reboot}
+ (parse-options "-s reboot-and-wait")            => {:strategy :reboot}
+ (parse-options "--strategy reboot")             => {:strategy :reboot}
+ (parse-options "--strategy reboot-and-wait")    => {:strategy :reboot}
+)

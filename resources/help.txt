@@ -26,6 +26,9 @@ GLOBAL-OPTIONS
     --dryrun, --dry-run, --show-plan
         Just print the plan without performing any step.
 
+    -s <strategy>, --strategy <strategy>
+        The name of the strategy used for the rolling update. See
+        STRATEGIES section below.
 
     --grace-period <time-in-seconds>  (default: 60s)
         The time to wait after the new the new instance comes to live
@@ -56,12 +59,26 @@ TARGET
 
 STRATEGIES
 
-    Currently, the only supported strategy is `terminate-and-wait`.
-    It terminates one instance from the selected auto-scaling group
-    and it waits until the auto-scaling group stabilizes back with
-    a new instance coming into service. After that there is a waiting
-    grace period to allow the new instance to join the cluster and
-    synchronize with the rest of the group (if necessary).
+    Which strategy is used for the rolling update of the instances.
+    Different use cases will require different strategies.  Currently,
+    we support strategy the following strategies:
+    The DEFAULT strategy is: terminate-and-wait.
+
+    -s terminate, --strategy terminate, --strategy terminate-and-wait
+        It terminates one instance from the selected auto-scaling
+        group and it waits until the auto-scaling group stabilizes
+        back with a new instance coming into service. After that there
+        is a waiting grace period to allow the new instance to join
+        the cluster and synchronize with the rest of the group (if
+        necessary).
+
+    -s reboot, --strategy reboot, --strategy reboot-and-wait
+        It reboots one instance from the selected auto-scaling
+        group and it waits until the auto-scaling group stabilizes
+        back with a new instance coming into service. After that there
+        is a waiting grace period to allow the new instance to join
+        the cluster and synchronize with the rest of the group (if
+        necessary).
 
 
 For more info please visit: https://github.com/BrunoBonacci/rolling-update

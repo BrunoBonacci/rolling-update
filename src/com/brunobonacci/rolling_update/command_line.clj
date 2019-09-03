@@ -22,6 +22,7 @@
 
        :grace-period (fn [time & [[_ [unit]]]]
                        [:grace-period [(Long/parseLong time) (or unit :seconds)]])
+       :strategy (fn [[n]] [:strategy n])
        :command (fn [& args]
                   (loop [cmd {} [arg & args] args]
                     (cond

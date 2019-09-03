@@ -27,8 +27,8 @@
 
 
 (defn list-targets
-  [cmd]
-  (println "(*) Rolling update targets:")
+  [{:keys [strategy] :as cmd}]
+  (println "(*) Rolling update targets (strategy:" (name (or strategy :terminate))  "):")
   (let [targets (->> (core/find-asg (cli/build-filters cmd)) (map :auto-scaling-group-name))]
     (doseq [asg targets]
       (println "    - " asg))
@@ -45,10 +45,10 @@
 
 
 (defn show-plan
-  [cmd]
+  [{:keys [strategy] :as cmd}]
   (println "(*) Rolling update plan:")
   (let [plan (->> (core/find-asg (cli/build-filters cmd))
-                (core/build-plan core/terminate-and-wait-strategy)
+                (core/build-plan (core/strategies strategy))
                 (core/enumerate-maps))]
     (doseq [step plan]
       (printf "    - Step %d/%d: %s\n"

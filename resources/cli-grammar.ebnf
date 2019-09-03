@@ -2,11 +2,17 @@ command          = atom? (<ws> atom)* <ws>*
 <atom>           = global-options | target
 
 <global-options> = global-option ( <ws> global-option )*
-<global-option>  = help | version | dry-run | grace-period
+<global-option>  = help | version | dry-run | grace-period | strategy
 help             = <'-h'> | <'--help'>
 version          = <'-v'> | <'--version'>
 dry-run          = <'--dryrun'> | <'--dry-run'> | <'--show-plan'>
 grace-period     = <'--grace-period'> <ws> #'\d+' time-unit?
+
+strategy         = (<'-s'> | <'--strategy'>) <ws> strategy-name
+<strategy-name>  = terminate / reboot
+terminate        = <'terminate'> / <'terminate-and-wait'>
+reboot           = <'reboot'> / <'reboot-and-wait'>
+
 time-unit        = seconds / minutes / hours
 seconds          = <'s'>
 minutes          = <'m'>

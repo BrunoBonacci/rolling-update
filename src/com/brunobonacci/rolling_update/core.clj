@@ -61,6 +61,14 @@
 
 
 
+(defn reboot-and-wait-strategy
+  [instance]
+  [{:action :reboot        :target instance}
+   {:action :asg-stabilize :target (:auto-scaling-group-name instance)}
+   {:action :grace-period  }])
+
+
+
 (defn index-by
   [f coll]
   (->> coll
@@ -132,6 +140,13 @@
 
 
 
+(defn reboot-instance
+  [instance-id & {:keys [wait]}]
+  (ec2/reboot-instances
+   :instance-ids [instance-id]))
+
+
+
 (defmulti perform-action! (fn [_ {:keys [action]}] action))
 
 
@@ -146,6 +161,19 @@
     (when (= status :running)
       #_(println "TERMINATING instance:" instance)
       (terminate-instance instance :wait true))))
+
+
+
+(defmethod perform-action! :reboot
+  [_ action]
+  (let [instance  (get-in action [:target :instance-id])
+        status    (-> (instance-status instance)
+                     (get-in [:instance-state :name])
+                     keyword)]
+    ;; if instance is still running
+    (when (= status :running)
+      #_(println "REBOOTING instance:" instance)
+      (reboot-instance instance :wait true))))
 
 
 
@@ -190,6 +218,12 @@
 
 
 
+(defmethod render-action :reboot
+  [_ {{:keys [instance-id auto-scaling-group-name]} :target :as action}]
+  (format "Rebooting: %s / %s..." auto-scaling-group-name instance-id))
+
+
+
 (defmethod render-action :asg-stabilize
   [_ {asg :target :as action}]
   (format "Waiting for: %s to stabilize..." asg))
@@ -206,10 +240,17 @@
 
 
 
+(def strategies
+  {nil        terminate-and-wait-strategy
+   :terminate terminate-and-wait-strategy
+   :reboot    reboot-and-wait-strategy})
+
+
+
 (defn rolling-update
-  [cfg asg-names]
+  [{:keys [strategy] :as cfg} asg-names]
   (let [asgs (find-asg asg-names)
-        plan (build-plan terminate-and-wait-strategy asgs)]
+        plan (build-plan (strategies strategy) asgs)]
 
     (doseq [step (enumerate-maps plan)]
       (printf "Step %d/%d: %s\n"

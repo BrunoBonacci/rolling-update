@@ -14,7 +14,7 @@ A command line tool for automated rolling update of auto-scaling groups.
   * Otherwise use the Manual installation
   ``` bash
   mkdir -p ~/bin
-  wget https://github.com/BrunoBonacci/rolling-update/releases/download/0.2.2/rolling-update -O ~/bin/rolling-update
+  wget https://github.com/BrunoBonacci/rolling-update/releases/download/0.3.0/rolling-update -O ~/bin/rolling-update
   chmod +x ~/bin/rolling-update
   export PATH=~/bin:$PATH
   ```
@@ -50,6 +50,9 @@ GLOBAL-OPTIONS
     --dryrun, --dry-run, --show-plan
         Just print the plan without performing any step.
 
+    -s <strategy>, --strategy <strategy>
+        The name of the strategy used for the rolling update. See
+        STRATEGIES section below.
 
     --grace-period <time-in-seconds>  (default: 60s)
         The time to wait after the new the new instance comes to live
@@ -80,12 +83,27 @@ TARGET
 
 STRATEGIES
 
-    Currently, the only supported strategy is `terminate-and-wait`.
-    It terminates one instance from the selected auto-scaling group
-    and it waits until the auto-scaling group stabilizes back with
-    a new instance coming into service. After that there is a waiting
-    grace period to allow the new instance to join the cluster and
-    synchronize with the rest of the group (if necessary).
+    Which strategy is used for the rolling update of the instances.
+    Different use cases will require different strategies.  Currently,
+    we support strategy the following strategies:
+    The DEFAULT strategy is: terminate-and-wait.
+
+    -s terminate, --strategy terminate, --strategy terminate-and-wait
+        It terminates one instance from the selected auto-scaling
+        group and it waits until the auto-scaling group stabilizes
+        back with a new instance coming into service. After that there
+        is a waiting grace period to allow the new instance to join
+        the cluster and synchronize with the rest of the group (if
+        necessary).
+
+    -s reboot, --strategy reboot, --strategy reboot-and-wait
+        It reboots one instance from the selected auto-scaling
+        group and it waits until the auto-scaling group stabilizes
+        back with a new instance coming into service. After that there
+        is a waiting grace period to allow the new instance to join
+        the cluster and synchronize with the rest of the group (if
+        necessary).
+
 ```
 
 
@@ -105,6 +123,16 @@ rolling-update user-service*
 This command will select all the autoscaling groups which match the
 following pattern `user-service*` and one instance at the time it will
 terminate, wait for the ASG to create a new one (with potentially a
+new config) and then move to the next instance, until completion.
+
+
+``` bash
+# ATTENTION: instances will be REBOOTED
+rolling-update user-service* -s reboot
+```
+This command will select all the autoscaling groups which match the
+following pattern `user-service*` and one instance at the time it will
+reboot, wait for the ASG to create a new one (with potentially a
 new config) and then move to the next instance, until completion.
 
 
