@@ -9,6 +9,9 @@ A command line tool for automated rolling update of auto-scaling groups.
   ``` bash
   brew tap BrunoBonacci/lazy-tools
   brew install rolling-update
+
+  # to update once installed
+  # brew update && brew upgrade rolling-update
   ```
 
   * Otherwise use the Manual installation
