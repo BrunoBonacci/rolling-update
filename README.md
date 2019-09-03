@@ -14,7 +14,7 @@ A command line tool for automated rolling update of auto-scaling groups.
   * Otherwise use the Manual installation
   ``` bash
   mkdir -p ~/bin
-  wget https://github.com/BrunoBonacci/rolling-update/releases/download/0.3.0/rolling-update -O ~/bin/rolling-update
+  wget https://github.com/BrunoBonacci/rolling-update/releases/download/0.3.1/rolling-update -O ~/bin/rolling-update
   chmod +x ~/bin/rolling-update
   export PATH=~/bin:$PATH
   ```

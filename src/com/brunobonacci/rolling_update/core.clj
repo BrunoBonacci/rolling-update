@@ -32,12 +32,51 @@
 
 
 
+;; mapcat is not lazy so defining one
+(defn lazy-mapcat
+  "maps a function over a collection and
+   lazily concatenate all the results."
+  [f coll]
+  (lazy-seq
+   (if (not-empty coll)
+     (concat
+      (f (first coll))
+      (lazy-mapcat f (rest coll))))))
+
+
+
+(defn lazy-paginated-query
+  "It creates a generic wrapper for a AWS paginated query"
+  [query-fn token-name result-fn]
+  (fn lazy-query
+    ([query]
+     (lazy-mapcat result-fn (lazy-query nil query)))
+    ([page-token query]
+     (let [result (query-fn
+                   (cond-> query
+                     page-token (assoc token-name page-token)))]
+       (lazy-seq
+        (if-let [next-page (get result token-name)]
+          (cons result
+                (lazy-query next-page query))
+          [result]))))))
+
+
+
+(def ^{:doc "lazy list of autoscaling groups"
+       :arglists '([query])}
+  autoscaling-groups
+  (lazy-paginated-query
+   asg/describe-auto-scaling-groups
+   :next-token
+   :auto-scaling-groups))
+
+
+
 (defn find-asg
   [target]
   (->>
-   (asg/describe-auto-scaling-groups
-    {:max-records 100})
-   :auto-scaling-groups
+   (autoscaling-groups {:max-records 100})
    (map #(update % :tags tags-as-map))
    (filter (if (string? target) (where [:auto-scaling-group-name :GLOB-MATCHES? target]) target))))
 
